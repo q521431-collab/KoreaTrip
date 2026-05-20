@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Korea Trip Map</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #ffe6f2, #ffffff, #efe4ff);
+      min-height: 100vh;
+      color: #333;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.7);
+      border-radius: 999px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      color: #ff4f8b;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    .hero h1 {
+      font-size: 64px;
+      font-weight: 900;
+      margin-bottom: 20px;
+      letter-spacing: -2px;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: auto;
+      color: #666;
+      line-height: 1.8;
+      font-size: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 40px;
+    }
+
+    .section {
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(20px);
+      border-radius: 36px;
+      padding: 30px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+      border: 1px solid rgba(255,255,255,0.5);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 30px;
+    }
+
+    .section-title h2 {
+      font-size: 38px;
+      font-weight: 900;
+    }
+
+    .section-title p {
+      color: #777;
+      margin-top: 4px;
+    }
+
+    .spot {
+      background: rgba(255,255,255,0.75);
+      border-radius: 28px;
+      padding: 22px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      transition: 0.3s;
+      border: 1px solid rgba(255,255,255,0.6);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+
+    .spot:hover {
+      transform: translateY(-4px) scale(1.01);
+    }
+
+    .spot-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .emoji {
+      font-size: 38px;
+    }
+
+    .spot h3 {
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .area {
+      color: #888;
+      font-size: 14px;
+    }
+
+    .desc {
+      color: #555;
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .detail {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .detail h4 {
+      margin-bottom: 10px;
+      margin-top: 16px;
+      font-size: 15px;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .tag-food {
+      background: #ffd9e7;
+      color: #d43d7c;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 14px;
+    }
+
+    .tag-place {
+      background: #eadcff;
+      color: #7a47d1;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 14px;
+    }
+
+    .map-wrapper {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 24px;
+    }
+
+    .map {
+      position: relative;
+      height: 500px;
+      border-radius: 32px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(240,240,255,0.8));
+      border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
+    }
+
+    .busan-map {
+      background:
+      linear-gradient(rgba(255,255,255,0.6), rgba(255,255,255,0.6)),
+      linear-gradient(135deg, #c7f0ff, #dbe7ff);
+    }
+
+    .seoul-map {
+      background:
+      linear-gradient(rgba(255,255,255,0.6), rgba(255,255,255,0.6)),
+      linear-gradient(135deg, #ffe1ee, #efe2ff);
+    }
+
+    .map::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,0.4) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.4) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.5;
+    }
+
+    .map-title {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      font-size: 34px;
+      font-weight: 900;
+      color: rgba(0,0,0,0.7);
+      z-index: 2;
+    }
+
+    .map-pin {
+      position: absolute;
+      z-index: 5;
+      width: 92px;
+      height: 92px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      font-size: 26px;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+      border: 2px solid rgba(255,255,255,0.7);
+    }
+
+    .map-pin span {
+      font-size: 12px;
+      margin-top: 4px;
+      font-weight: 700;
+      color: #555;
+    }
+
+    .map-pin:hover {
+      transform: scale(1.08) translateY(-4px);
+    }
+
+    .timeline {
+      margin-top: 60px;
+      background: rgba(255,255,255,0.6);
+      border-radius: 36px;
+      padding: 32px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+    }
+
+    .timeline h2 {
+      font-size: 32px;
+      margin-bottom: 24px;
+      font-weight: 900;
+    }
+
+    .days {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .day {
+      background: linear-gradient(135deg, #fff2f8, #f6efff);
+      padding: 18px;
+      border-radius: 24px;
+      line-height: 1.6;
+      font-weight: 600;
+      color: #555;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 42px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="hero">
+      <div class="badge">2026 Korea Trip ✈️</div>
+      <h1>부산 → 서울</h1>
+      <p>
+        一場從釜山海景、汗蒸幕，到首爾韓屋與潮流街區的韓系旅行。
+        點擊景點卡片，可以展開周邊美食與順遊推薦。
+      </p>
+    </div>
+
+    <div style="margin-bottom:40px; background: rgba(255,255,255,0.6); backdrop-filter: blur(20px); border-radius: 36px; padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.08);">
+      <h2 style="font-size:32px; font-weight:900; margin-bottom:20px;">🗺️ 韓國旅行地圖動線</h2>
+      <p style="color:#666; margin-bottom:30px; line-height:1.8;">
+        用地圖感方式呈現這次的旅遊動線，可以更直觀看出景點相對位置與每日移動方向。
+        點擊地圖上的景點，也可以展開推薦美食與周邊玩法。
+      </p>
+
+      <div class="map-wrapper">
+        <div class="map busan-map">
+          <div class="map-title">BUSAN</div>
+
+          <div class="map-pin" style="top:38%; left:56%;" onclick="scrollToSpot('spaland')">
+            ♨️<span>SPA LAND</span>
+          </div>
+
+          <div class="map-pin" style="top:30%; left:76%;" onclick="scrollToSpot('haeundae')">
+            🌊<span>海雲台</span>
+          </div>
+
+          <div class="map-pin" style="top:58%; left:48%;" onclick="scrollToSpot('gwangan')">
+            🌉<span>廣安里</span>
+          </div>
+
+          <div class="map-pin" style="top:55%; left:20%;" onclick="scrollToSpot('seomyeon')">
+            🛍️<span>西面</span>
+          </div>
+        </div>
+
+        <div class="map seoul-map">
+          <div class="map-title">SEOUL</div>
+
+          <div class="map-pin" style="top:20%; left:48%;" onclick="scrollToSpot('gyeongbok')">
+            👘<span>景福宮</span>
+          </div>
+
+          <div class="map-pin" style="top:38%; left:50%;" onclick="scrollToSpot('iksun')">
+            ☕<span>益善洞</span>
+          </div>
+
+          <div class="map-pin" style="top:62%; left:72%;" onclick="scrollToSpot('seongsu')">
+            🧃<span>聖水洞</span>
+          </div>
+
+          <div class="map-pin" style="top:68%; left:62%;" onclick="scrollToSpot('hannam')">
+            ✨<span>漢南洞</span>
+          </div>
+
+          <div class="map-pin" style="top:58%; left:42%;" onclick="scrollToSpot('myeongdong')">
+            💄<span>明洞</span>
+          </div>
+
+          <div class="map-pin" style="top:58%; left:52%;" onclick="scrollToSpot('namsan')">
+            🌃<span>首爾塔</span>
+          </div>
+
+          <div class="map-pin" style="top:48%; left:20%;" onclick="scrollToSpot('hongdae')">
+            🎧<span>弘大</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <section class="section">
+        <div class="section-title">
+          <div style="font-size:42px">🌊</div>
+          <div>
+            <h2>BUSAN</h2>
+            <p>6/1 – 6/3 獨旅療癒行程</p>
+          </div>
+        </div>
+
+        <div class="spot" id="spaland" onclick="toggleDetail(this)">
+          <div class="spot-header">
+            <div class="emoji">♨️</div>
+            <div>
+              <h3>SPA LAND</h3>
+              <div class="area">Busan / Centum City</div>
+            </div>
+          </div>
+          <div class="desc">汗蒸幕回血＋新世界百貨 chill day</div>
+
+          <div class="detail">
+            <h4>🍴 附近推薦美食</h4>
+            <div class="tags">
+              <div class="tag-food">韓式炸雞</div>
+              <div class="tag-food">豬肉湯飯</div>
+              <div class="tag-food">新世界美食街</div>
+            </div>
+
+            <h4>📍 周邊順遊</h4>
+            <div class="tags">
+              <div class="tag-place">新世界百貨</div>
+              <div class="tag-place">BEXCO</div>
+              <div class="tag-place">Centum City</div>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="spot" id="seomyeon" onclick="toggleDetail(this)">
+          <div class="spot-header">
+            <div class="emoji">🛍️</div>
+            <div>
+              <h3>西面</h3>
+              <div class="area">Busan / Seomyeon</div>
+            </div>
+          </div>
+
+          <div class="desc">
+            釜山最強逛街商圈＋Olive Young＋深夜美食天堂
+          </div>
+
+          <div class="detail">
+            <h4>🍴 附近推薦美食</h4>
+
+            <div class="tags">
+              <div class="tag-food">83烤肉</div>
+              <div class="tag-food">醒酒湯</div>
+              <div class="tag-food">韓式居酒屋</div>
+            </div>
+
+            <h4>📍 周邊順遊</h4>
+
+            <div class="tags">
+              <div class="tag-place">樂天百貨</div>
+              <div class="tag-place">西面地下街</div>
+              <div class="tag-place">Olive Young</div>
+            </div>
+          </div>
+        </div>
+
+
+
+        <div class="spot" id="haeundae" onclick="toggleDetail(this)">
+          <div class="spot-header">
+            <div class="emoji">🌊</div>
+            <div>
+              <h3>海雲台藍線公園</h3>
+              <div class="area">Busan / Haeundae</div>
+            </div>
+          </div>
+          <div class="desc">膠囊列車＋海岸列車＋海景咖啡廳</div>
+
+          <div class="detail">
+            <h4>🍴 附近推薦美食</h4>
+            <div class="tags">
+              <div class="tag-food">海景咖啡廳</div>
+              <div class="tag-food">韓式烤貝</div>
+              <div class="tag-food">生魚片</div>
+            </div>
+
+            <h4>📍 周邊順遊</h4>
+            <div class="tags">
+              <div class="tag-place">青沙浦</div>
+              <div class="tag-place">尾浦</div>
+              <div class="tag-place">松亭海水浴場</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="spot" id="gwangan" onclick="toggleDetail(this)">
+          <div class="spot-header">
+            <div class="emoji">🌉</div>
+            <div>
+              <h3>廣安里</h3>
+              <div class="area">Busan / Gwangan</div>
+            </div>
+          </div>
+          <div class="desc">夜景、小酒、韓劇感散步</div>
+
+          <div class="detail">
+            <h4>🍴 附近推薦美食</h4>
+            <div class="tags">
+              <div class="tag-food">燒酒 pocha</div>
+              <div class="tag-food">海鮮鍋</div>
+              <div class="tag-food">豬肉湯飯</div>
+            </div>
+
+            <h4>📍 周邊順遊</h4>
+            <div class="tags">
+              <div class="tag-place">廣安大橋</div>
+              <div class="tag-place">Millac The Market</div>
+              <div class="tag-place">海邊便利商店</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">
+          <div style="font-size:42px">🏙️</div>
+          <div>
+            <h2>SEOUL</h2>
+            <p>6/3 – 6/8 韓劇感城市旅行</p>
+          </div>
+        </div>
+
+        <div class="spot" id="gyeongbok" onclick="toggleDetail(this)">
+          <div class="spot-header">
+            <div class="emoji">👘</div>
+            <div>
+              <h3>景福宮</h3>
+              <div class="area">Seoul / Jongno</div>
+            </div>
+          </div>
+          <div class="desc">韓服＋韓國古宮體驗</div>
+
+          <div class="detail">
+            <h4>🍴 附近推薦美食</h4>
+            <div class="tags">
+              <div class="tag-food">土俗村蔘雞湯</div>
+              <div class="tag-food">韓屋咖啡廳</div>
+              <div class="tag-food">韓式甜點</div>
+            </div>
+
+            <h4>📍 周邊順遊</h4>
+            <div class="tags">
+              <div class="tag-place">北村韓屋村</div>
+              <div class="tag-place">三清洞</div>
+              <div class="tag-place">安國站</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="spot" id="iksun" onclick="toggleDetail(this)">
+          <div class="spot-header">
+            <div class="emoji">☕</div>
+            <div>
+              <h3>益善洞</h3>
+              <div class="area">Seoul / Jongno</div>
+            </div>
+          </div>
+          <div class="desc">韓屋咖啡廳＋文青感爆棚</div>
+
+          <div class="detail">
+            <h4>🍴 附近推薦美食</h4>
+            <div class="tags">
+              <div class="tag-food">鹽麵包</div>
+              <div class="tag-food">韓屋咖啡</div>
+              <div class="tag-food">燒肉店</div>
+            </div>
+
+            <h4>📍 周邊順遊</h4>
+            <div class="tags">
+              <div class="tag-place">鐘路3街</div>
+              <div class="tag-place">清溪川</div>
+              <div class="tag-place">布帳馬車</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="spot" id="myeongdong" onclick="toggleDetail(this)">
+          <div class="spot-header">
+            <div class="emoji">💄</div>
+            <div>
+              <h3>明洞</h3>
+              <div class="area">Seoul / Myeongdong</div>
+            </div>
+          </div>
+
+          <div class="desc">
+            美妝掃貨＋韓國街邊小吃天堂
+          </div>
+
+          <div class="detail">
+            <h4>🍴 附近推薦美食</h4>
+
+            <div class="tags">
+              <div class="tag-food">糖餅</div>
+              <div class="tag-food">辣炒年糕</div>
+              <div class="tag-food">韓式熱狗</div>
+            </div>
+
+            <h4>📍 周邊順遊</h4>
+
+            <div class="tags">
+              <div class="tag-place">Olive Young</div>
+              <div class="tag-place">樂天百貨</div>
+              <div class="tag-place">換錢所</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="spot" id="namsan" onclick="toggleDetail(this)">
+          <div class="spot-header">
+            <div class="emoji">🌃</div>
+            <div>
+              <h3>首爾塔</h3>
+              <div class="area">Seoul / Namsan</div>
+            </div>
+          </div>
+
+          <div class="desc">
+            首爾夜景約會感滿分地標
+          </div>
+
+          <div class="detail">
+            <h4>🍴 附近推薦美食</h4>
+
+            <div class="tags">
+              <div class="tag-food">炸雞啤酒</div>
+              <div class="tag-food">便利商店野餐</div>
+              <div class="tag-food">韓式酒吧</div>
+            </div>
+
+            <h4>📍 周邊順遊</h4>
+
+            <div class="tags">
+              <div class="tag-place">南山公園</div>
+              <div class="tag-place">纜車</div>
+              <div class="tag-place">夜景步道</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="spot" id="seongsu" onclick="toggleDetail(this)">
+          <div class="spot-header">
+            <div class="emoji">🧃</div>
+            <div>
+              <h3>聖水洞</h3>
+              <div class="area">Seoul / Seongsu</div>
+            </div>
+          </div>
+          <div class="desc">韓國潮流品牌＋工業風咖啡廳</div>
+
+          <div class="detail">
+            <h4>🍴 附近推薦美食</h4>
+            <div class="tags">
+              <div class="tag-food">Cafe Onion</div>
+              <div class="tag-food">可頌</div>
+              <div class="tag-food">韓式早午餐</div>
+            </div>
+
+            <h4>📍 周邊順遊</h4>
+            <div class="tags">
+              <div class="tag-place">DIOR</div>
+              <div class="tag-place">MUSINSA</div>
+              <div class="tag-place">潮牌店</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="spot" id="hannam" onclick="toggleDetail(this)">
+          <div class="spot-header">
+            <div class="emoji">✨</div>
+            <div>
+              <h3>漢南洞</h3>
+              <div class="area">Seoul / Hannam</div>
+            </div>
+          </div>
+
+          <div class="desc">
+            韓國女生最愛高級感街區＋選物店巡禮
+          </div>
+
+          <div class="detail">
+            <h4>🍴 附近推薦美食</h4>
+
+            <div class="tags">
+              <div class="tag-food">Wine Bar</div>
+              <div class="tag-food">韓式義大利麵</div>
+              <div class="tag-food">精品甜點店</div>
+            </div>
+
+            <h4>📍 周邊順遊</h4>
+
+            <div class="tags">
+              <div class="tag-place">Beaker</div>
+              <div class="tag-place">漢江鎮</div>
+              <div class="tag-place">精品選物店</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="spot" id="hongdae" onclick="toggleDetail(this)">
+          <div class="spot-header">
+            <div class="emoji">🎧</div>
+            <div>
+              <h3>弘大</h3>
+              <div class="area">Seoul / Hongdae</div>
+            </div>
+          </div>
+
+          <div class="desc">
+            年輕潮流＋街頭文化＋深夜美食
+          </div>
+
+          <div class="detail">
+            <h4>🍴 附近推薦美食</h4>
+
+            <div class="tags">
+              <div class="tag-food">韓式烤肉</div>
+              <div class="tag-food">深夜炸雞</div>
+              <div class="tag-food">居酒屋</div>
+            </div>
+
+            <h4>📍 周邊順遊</h4>
+
+            <div class="tags">
+              <div class="tag-place">延南洞</div>
+              <div class="tag-place">街頭表演</div>
+              <div class="tag-place">潮流服飾店</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="timeline">
+      <h2>🗓️ 旅程節奏</h2>
+
+      <div class="days">
+        <div class="day">Day1｜SPA LAND＋西面＋廣安里</div>
+        <div class="day">Day2｜海雲台藍線公園＋夕陽咖啡</div>
+        <div class="day">Day3｜KTX→首爾＋益善洞</div>
+        <div class="day">Day4｜韓服＋景福宮＋北村韓屋村</div>
+        <div class="day">Day5｜聖水洞＋漢南洞</div>
+        <div class="day">Day6｜明洞＋首爾塔＋東大門</div>
+        <div class="day">Day7｜弘大自由補貨日</div>
+        <div class="day">Day8｜咖啡廳 chill 回台</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function scrollToSpot(id) {
+      const target = document.getElementById(id);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.style.transform = 'scale(1.02)';
+        setTimeout(() => {
+          target.style.transform = '';
+        }, 1000);
+      }
+    }
+
+    function toggleDetail(element) {
+      const detail = element.querySelector('.detail');
+
+      if (detail.style.display === 'block') {
+        detail.style.display = 'none';
+      } else {
+        detail.style.display = 'block';
+      }
+    }
+  </script>
+
+</body>
+</html>
