@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>首頁 - 我的韓國之旅 | Korea Trip</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+
+  <style>
+    :root {
+      --primary-pastel: #ffe6f2;
+      --secondary-pastel: #efe4ff;
+      --k-blue: #d6e5ff;
+      --k-dark: #4a4a4a;
+      --k-text: #666666;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--primary-pastel), #ffffff, var(--secondary-pastel));
+      min-height: 100vh;
+      color: var(--k-dark);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px 60px 20px;
+    }
+
+    header {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 20px;
+    }
+
+    .logo { font-size: 1.5rem; font-weight: 900; color: var(--k-dark); text-decoration: none; letter-spacing: 1px; }
+    .logo span { color: #ff4f8b; }
+    .nav-links { display: flex; list-style: none; gap: 30px; }
+    .nav-links a { text-decoration: none; color: #555; font-size: 1rem; font-weight: 500; transition: color 0.3s; }
+    .nav-links a:hover { color: #ff4f8b; }
+
+    .hero-section {
+      height: 85vh;
+      background: linear-gradient(rgba(255, 255, 255, 0.1), rgba(239, 228, 255, 0.2)),
+                  url('http://googleusercontent.com/image_generation_content/3') no-repeat center center/cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      margin-bottom: 60px;
+      padding-top: 80px;
+    }
+
+    .hero-glass-card {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 40px;
+      padding: 50px 60px;
+      box-shadow: 0 30px 70px rgba(0,0,0,0.05);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      max-width: 800px;
+      width: 90%;
+      animation: fadeIn 0.8s ease;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 20px;
+      background: #ffffff;
+      border-radius: 999px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+      color: #ff4f8b;
+      margin-bottom: 24px;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 1px;
+    }
+
+    .hero-glass-card h1 { font-size: 52px; font-weight: 900; margin-bottom: 18px; letter-spacing: -1px; color: #333; }
+    .hero-glass-card p { color: #555; line-height: 1.8; font-size: 18px; margin-bottom: 30px; }
+
+    .btn-cta {
+      display: inline-block;
+      background: linear-gradient(135deg, #ff76a3, #ff4f8b);
+      color: white;
+      padding: 14px 38px;
+      text-decoration: none;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 16px;
+      box-shadow: 0 10px 25px rgba(255, 79, 139, 0.35);
+      transition: all 0.3s ease;
+    }
+    .btn-cta:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(255, 79, 139, 0.5); }
+
+    .intro-banner {
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(20px);
+      border-radius: 36px;
+      padding: 30px 40px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      margin-bottom: 50px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .intro-banner .icon { font-size: 32px; }
+    .intro-banner p { color: var(--k-text); font-size: 15px; line-height: 1.7; flex: 1; min-width: 240px; }
+    .intro-banner .legend { display: flex; gap: 14px; font-size: 13px; color: #777; font-weight: 600; }
+    .intro-banner .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+    /* === 城市區塊：地圖 + 可捲動清單 === */
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: 40px; margin-bottom: 60px; }
+
+    .section {
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(20px);
+      border-radius: 36px;
+      padding: 26px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.06);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .section-title { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+    .section-title h2 { font-size: 32px; font-weight: 900; }
+    .section-title p { color: #777; margin-top: 4px; font-size: 14px; }
+
+    .city-body { display: grid; grid-template-columns: 1fr 1.1fr; gap: 18px; }
+    @media (max-width: 1240px) { .city-body { grid-template-columns: 1fr; } }
+
+    .real-map {
+      height: 560px;
+      border-radius: 28px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+    .real-map .leaflet-container { font-family: 'Noto Sans TC', sans-serif; background: #f7f5fb; }
+    /* 讓地圖套色貼近粉嫩韓系調性 */
+    .busan-map .leaflet-tile-pane { filter: saturate(0.55) brightness(1.06) hue-rotate(180deg) contrast(0.95); }
+    .seoul-map .leaflet-tile-pane { filter: saturate(0.5) brightness(1.08) hue-rotate(-15deg) contrast(0.95); }
+
+    .map-pin-icon {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: rgba(255,255,255,0.95);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      border: 2px solid rgba(255,255,255,0.9);
+      transition: transform 0.25s ease;
+    }
+    .map-pin-icon.active { border-color: #ff76a3; transform: scale(1.15); }
+
+    /* 可捲動的景點清單，長度固定，不會把頁面拉得很長 */
+    .spot-list {
+      max-height: 560px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+    .spot-list::-webkit-scrollbar { width: 6px; }
+    .spot-list::-webkit-scrollbar-thumb { background: rgba(255,118,163,0.35); border-radius: 10px; }
+    .spot-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.03); border-radius: 10px; }
+
+    .spot {
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 22px;
+      padding: 18px 20px;
+      margin-bottom: 14px;
+      cursor: pointer;
+      transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.03);
+    }
+    .spot:hover { background: #ffffff; box-shadow: 0 12px 28px rgba(255, 118, 163, 0.1); }
+    .spot.active { border-color: #ff76a3; box-shadow: 0 15px 32px rgba(255, 118, 163, 0.22); }
+
+    .spot-header { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .spot-header-left { display: flex; align-items: center; gap: 12px; }
+    .emoji { font-size: 28px; }
+    .spot h3 { font-size: 18px; font-weight: 800; }
+    .area { color: #999; font-size: 13px; }
+    .chevron { font-size: 13px; color: #bbb; transition: transform 0.3s; }
+    .spot.open .chevron { transform: rotate(180deg); }
+    .desc { color: #555; line-height: 1.6; font-size: 14px; margin-top: 8px; }
+
+    .detail {
+      display: none;
+      animation: fadeIn 0.3s ease;
+      margin-top: 14px;
+      border-top: 1px dashed rgba(0,0,0,0.08);
+      padding-top: 14px;
+    }
+    .spot.open .detail { display: block; }
+    .detail h4 { margin-bottom: 8px; margin-top: 10px; font-size: 13px; color: #444; }
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag-food, .tag-place {
+      padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 500;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+      transition: 0.2s;
+    }
+    .tag-food { background: #ffd9e7; color: #d43d7c; }
+    .tag-food:hover { background: #ffc2dc; }
+    .tag-place { background: #eadcff; color: #7a47d1; }
+    .tag-place:hover { background: #ddc4ff; }
+    .tag-food::after, .tag-place::after { content: '↗'; font-size: 10px; opacity: 0.6; }
+
+    .timeline {
+      margin-top: 20px;
+      background: rgba(255,255,255,0.6);
+      border-radius: 36px;
+      padding: 40px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+      border: 1px solid rgba(255,255,255,0.4);
+    }
+    .timeline h2 { font-size: 32px; margin-bottom: 24px; font-weight: 900; }
+    .days { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .day {
+      background: #ffffff; padding: 20px; border-radius: 24px; line-height: 1.6; font-weight: 600; color: #555;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.02); border: 1px solid rgba(255,255,255,0.8); transition: 0.3s;
+    }
+    .day:hover { background: linear-gradient(135deg, #fff2f8, #f6efff); transform: translateY(-2px); }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 992px) {
+      .hero-glass-card h1 { font-size: 38px; }
+      .grid { grid-template-columns: 1fr; }
+      .real-map, .spot-list { height: 420px; max-height: 420px; }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .hero-glass-card { padding: 35px 20px; }
+      .hero-glass-card h1 { font-size: 32px; }
+      .hero-section { height: auto; padding: 140px 0 60px 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <nav class="nav-container">
+      <a href="#" class="logo">KOREA<span>.</span>TRIP</a>
+      <ul class="nav-links">
+        <li><a href="#">首頁</a></li>
+        <li><a href="#spots-detail">旅行地圖</a></li>
+        <li><a href="#trip-timeline">旅程節奏</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="hero-section">
+    <div class="hero-glass-card">
+      <div class="badge">SEOUL & BUSAN ✈️</div>
+      <h1>韓國雙城模式開啟：釜山Me Time × 首爾Girls Trip</h1>
+      <p>從釜山的浪漫碧海與汗蒸幕舒壓回血，到首爾古色古香的古宮韓服、聖水洞與弘大的潮流巡禮。點擊下方地圖上的定位針或景點卡片，即可同步探索私房美食與周邊順遊推薦！</p>
+      <a href="#spots-detail" class="btn-cta">開啟探索之旅</a>
+    </div>
+  </section>
+
+  <div class="container">
+
+    <div class="intro-banner">
+      <div class="icon">📍</div>
+      <p>地圖標記皆採用實際 GPS 座標定位，美食與順遊標籤點一下就能直接開 Google 地圖搜尋周邊。清單可獨立捲動，不會因為景點變多把整頁拉得又臭又長。</p>
+      <div class="legend">
+        <span><span class="legend-dot" style="background:#8ec9ff"></span>釜山</span>
+        <span><span class="legend-dot" style="background:#ff9dc0"></span>首爾</span>
+      </div>
+    </div>
+
+    <div id="spots-detail" class="grid">
+
+      <section class="section">
+        <div class="section-title">
+          <div style="font-size:38px">🌊</div>
+          <div>
+            <h2>BUSAN 釜山</h2>
+            <p>療癒與放鬆的海港之行 · 4 個景點</p>
+          </div>
+        </div>
+
+        <div class="city-body">
+          <div class="real-map busan-map" id="map-busan"></div>
+          <div class="spot-list" id="list-busan"></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">
+          <div style="font-size:38px">🏙️</div>
+          <div>
+            <h2>SEOUL 首爾</h2>
+            <p>時尚潮流與古典宮殿的碰撞 · 7 個景點</p>
+          </div>
+        </div>
+
+        <div class="city-body">
+          <div class="real-map seoul-map" id="map-seoul"></div>
+          <div class="spot-list" id="list-seoul"></div>
+        </div>
+      </section>
+    </div>
+
+    <div id="trip-timeline" class="timeline">
+      <h2>🗓️ 釜山Me Time × 首爾Girls Trip 節奏開啟</h2>
+      <div class="days">
+        <div class="day">Day 1｜抵達釜山：SPA LAND 大舒壓 → 西面居酒屋 → 廣安里夜景</div>
+        <div class="day">Day 2｜海洋放鬆：海雲台藍線列車 → 尾浦海岸咖啡廳</div>
+        <div class="day">Day 3｜跨城移動：搭乘 KTX 高鐵前往首爾 → 益善洞微醺夜</div>
+        <div class="day">Day 4｜宮廷復古：韓服裝扮 → 景福宮拍美照 → 北村韓屋村散步</div>
+        <div class="day">Day 5｜潮流前線：聖水洞 DIOR 快閃 → 漢南洞設計師品牌掃貨</div>
+        <div class="day">Day 6｜都市經典：明洞美妝補貨 → 南山纜車 → 首爾塔看夜景</div>
+        <div class="day">Day 7｜年輕活力：弘大商圈全日逛街 → 延南洞愜意午茶</div>
+        <div class="day">Day 8｜完美句點：韓式早午餐 → 採購伴手禮 → 搭機回台</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script>
+    // 真實座標資料（來源：Google Places）
+    const busanSpots = [
+      { id: 'spaland', emoji: '♨️', name: 'SPA LAND', area: '釜山 / Centum City', lat: 35.168234, lng: 129.129528,
+        desc: '五星級汗蒸幕回血體驗＋新世界百貨半日遊',
+        food: ['韓式炸雞', '豬肉湯飯', '新世界百貨美食街'],
+        place: ['新世界百貨公司', 'BEXCO 展覽中心', 'Centum City 廣場'] },
+      { id: 'seomyeon', emoji: '🛍️', name: '西面商圈', area: '釜山 / 西面', lat: 35.156299, lng: 129.059155,
+        desc: '交通樞紐中心，極速大採購與深夜居酒屋大街',
+        food: ['83烤肉', '馬鈴薯排骨湯', '道地布帳馬車小吃'],
+        place: ['樂天百貨', '西面地下街', 'Olive Young 旗艦店'] },
+      { id: 'haeundae', emoji: '🌊', name: '海雲台藍線公園', area: '釜山 / 海雲台', lat: 35.158284, lng: 129.172767,
+        desc: '浪漫天空膠囊火車，盡情享受海天一色的絕美海岸線',
+        food: ['海景文青咖啡廳', '韓式烤貝類', '現切生魚片'],
+        place: ['青沙浦紅白燈塔', '尾浦鐵道', '松亭海水浴場'] },
+      { id: 'gwangan', emoji: '🌉', name: '廣安里海水浴場', area: '釜山 / 廣安里', lat: 35.153170, lng: 129.118666,
+        desc: '欣賞廣安大橋夜景、無人機燈光秀與海邊散步',
+        food: ['海邊燒酒 Pocha', '活海鮮鍋', '炭火烤肉'],
+        place: ['廣安大橋步道', 'Millac The Market 市集', '海邊露天座位'] },
+    ];
+
+    const seoulSpots = [
+      { id: 'gyeongbok', emoji: '👘', name: '景福宮', area: '首爾 / 鐘路區', lat: 37.579617, lng: 126.977041,
+        desc: '精緻韓服租借體驗，彷彿步入古典韓劇場景',
+        food: ['土俗村蔘雞湯', '百年韓屋咖啡', '韓式傳統宮廷糕點'],
+        place: ['北村韓屋村', '三清洞文青街', '安國站網美店'] },
+      { id: 'iksun', emoji: '☕', name: '益善洞韓屋村', area: '首爾 / 鐘路區', lat: 37.573713, lng: 126.990127,
+        desc: '百年老韓屋改建的小巷弄，聚集極具特色的文青咖啡廳',
+        food: ['招牌鹽麵包', '手沖單品咖啡', '復古風韓式定食'],
+        place: ['鐘路三街站', '清溪川', '深夜布帳馬車一條街'] },
+      { id: 'myeongdong', emoji: '💄', name: '明洞商圈', area: '首爾 / 明洞', lat: 37.564189, lng: 126.986118,
+        desc: '一站式美妝保養品大掃貨，兼具豐富的國際品牌與小吃',
+        food: ['經典糖餅', '明洞餃子', '起司辣炒年糕'],
+        place: ['Olive Young 總店', '樂天百貨總店', '明洞聖堂'] },
+      { id: 'namsan', emoji: '🌃', name: 'N 首爾塔', area: '首爾 / 南山', lat: 37.551169, lng: 126.988227,
+        desc: '登頂俯瞰璀璨的首爾夜景，極具指標性的浪漫地標',
+        food: ['南山炸豬排', '炸雞啤酒', '高空景觀餐廳'],
+        place: ['南山公園步道', '南山纜車', '愛情鎖牆'] },
+      { id: 'seongsu', emoji: '🧃', name: '聖水洞', area: '首爾 / 聖水', lat: 37.540685, lng: 127.056632,
+        desc: '當紅的工業風複合式空間、新銳潮牌快閃店集中地',
+        food: ['Cafe Onion', '排隊馬鈴薯排骨湯', '手工法式可頌'],
+        place: ['DIOR 聖水概念店', 'MUSINSA 實體店', '首爾林'] },
+      { id: 'hannam', emoji: '✨', name: '漢南洞', area: '首爾 / 龍山區', lat: 37.537528, lng: 127.005133,
+        desc: '低調奢華與高質感兼具的街區，網羅眾多小眾設計師選物店',
+        food: ['歐式小酒館', '精品法式甜點', '韓式創意無菜單'],
+        place: ['Beaker 選品店', 'Mardi Mercredi', '三星美術館'] },
+      { id: 'hongdae', emoji: '🎧', name: '弘大商圈', area: '首爾 / 麻浦區', lat: 37.556197, lng: 126.925034,
+        desc: '洋溢青春的大學商圈，滿載街頭表演與極致夜生活',
+        food: ['石板烤五花肉', '深夜辣炒年糕', '起司烤雞'],
+        place: ['延南洞林蔭道', '想散步的小徑', '街頭藝術牆'] },
+    ];
+
+    // 美食／順遊標籤沒有精確座標，改用地點名稱＋所在區域組成搜尋字串，
+    // 並用景點座標當作 Google 地圖搜尋的中心點，讓結果落在對的區域
+    function gmapSearchUrl(keyword, area, lat, lng) {
+      const q = `${keyword} ${area}`;
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}&center=${lat},${lng}`;
+    }
+
+    function tagRow(items, cls, area, lat, lng) {
+      return items.map(t =>
+        `<a class="${cls}" href="${gmapSearchUrl(t, area, lat, lng)}" target="_blank" rel="noopener">${t}</a>`
+      ).join('');
+    }
+
+    function buildCity(cityKey, spots, center, zoom) {
+      // 建立真實地圖（OpenStreetMap 圖磚，套用韓系粉嫩濾鏡）
+      const map = L.map('map-' + cityKey, { scrollWheelZoom: false }).setView(center, zoom);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      const markers = {};
+
+      spots.forEach(spot => {
+        const icon = L.divIcon({
+          className: '',
+          html: `<div class="map-pin-icon" id="pin-${spot.id}">${spot.emoji}</div>`,
+          iconSize: [46, 46],
+          iconAnchor: [23, 23],
+        });
+        const marker = L.marker([spot.lat, spot.lng], { icon }).addTo(map);
+        marker.bindPopup(`<strong>${spot.name}</strong><br/>${spot.area}`);
+        marker.on('click', () => openSpot(cityKey, spot.id, true));
+        markers[spot.id] = marker;
+      });
+
+      // 建立可獨立捲動的景點清單（避免頁面被拉超長）
+      const listEl = document.getElementById('list-' + cityKey);
+      listEl.innerHTML = spots.map(spot => `
+        <div class="spot" id="spot-${spot.id}" data-city="${cityKey}" data-id="${spot.id}">
+          <div class="spot-header">
+            <div class="spot-header-left">
+              <div class="emoji">${spot.emoji}</div>
+              <div>
+                <h3>${spot.name}</h3>
+                <div class="area">${spot.area}</div>
+              </div>
+            </div>
+            <div class="chevron">▾</div>
+          </div>
+          <div class="desc">${spot.desc}</div>
+          <div class="detail">
+            <h4>🍴 附近推薦美食</h4>
+            <div class="tags">${tagRow(spot.food, 'tag-food', spot.area, spot.lat, spot.lng)}</div>
+            <h4>📍 周邊順遊</h4>
+            <div class="tags">${tagRow(spot.place, 'tag-place', spot.area, spot.lat, spot.lng)}</div>
+          </div>
+        </div>
+      `).join('');
+
+      listEl.querySelectorAll('.spot').forEach(card => {
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('.tag-food, .tag-place')) return; // 不攔截外部連結點擊
+          const id = card.dataset.id;
+          const wasOpen = card.classList.contains('open');
+          openSpot(cityKey, id, false, !wasOpen);
+        });
+      });
+
+      return { map, markers };
+    }
+
+    const cityInstances = {};
+
+    function openSpot(cityKey, id, fromMap, forceOpen) {
+      const listEl = document.getElementById('list-' + cityKey);
+      const targetCard = document.getElementById('spot-' + id);
+      const shouldOpen = forceOpen === undefined ? true : forceOpen;
+
+      // 一次只展開一張卡片，清單長度維持固定
+      listEl.querySelectorAll('.spot').forEach(c => {
+        c.classList.remove('active');
+        if (c !== targetCard) c.classList.remove('open');
+      });
+      Object.values(cityInstances[cityKey].markers).forEach(m => {
+        const el = m.getElement();
+        if (el) el.querySelector('.map-pin-icon')?.classList.remove('active');
+      });
+
+      if (shouldOpen) {
+        targetCard.classList.add('open', 'active');
+      } else {
+        targetCard.classList.remove('open');
+      }
+
+      const pinEl = document.getElementById('pin-' + id);
+      if (pinEl) pinEl.classList.add('active');
+
+      if (fromMap) {
+        targetCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        const marker = cityInstances[cityKey].markers[id];
+        cityInstances[cityKey].map.panTo(marker.getLatLng());
+        marker.openPopup();
+      }
+    }
+
+    cityInstances.busan = buildCity('busan', busanSpots, [35.159, 129.115], 12);
+    cityInstances.seoul = buildCity('seoul', seoulSpots, [37.560, 126.995], 12);
+  </script>
+
+</body>
+</html>
